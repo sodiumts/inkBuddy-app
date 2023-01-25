@@ -21,10 +21,7 @@ class TempHumidityViewModel @Inject constructor(
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
-    var firmware by mutableStateOf(0f)
-        private set
-
-    var firmware2 by mutableStateOf(0f)
+    var testNum by mutableStateOf("")
         private set
 
     var connectionState by mutableStateOf<ConnectionState>(ConnectionState.Uninitialized)
@@ -35,8 +32,7 @@ class TempHumidityViewModel @Inject constructor(
                 when(result){
                     is Resource.Success -> {
                         connectionState = result.data.connectionState
-                        firmware = result.data.fwVersion
-                        firmware2 = result.data.fwVersion2
+                        testNum = result.data.readNum
                     }
                     is Resource.Loading -> {
                         initializingMessage = result.message
@@ -58,7 +54,12 @@ class TempHumidityViewModel @Inject constructor(
         temperatureAndHumidityReceiveManager.reconnect()
     }
 
-
+    fun readCharacteristic(){
+        temperatureAndHumidityReceiveManager.readCharacteristic()
+    }
+    fun writeImage(payload:ByteArray){
+        temperatureAndHumidityReceiveManager.writeImage(payload)
+    }
 
     fun initializeConnection(){
         errorMessage = null
@@ -70,6 +71,7 @@ class TempHumidityViewModel @Inject constructor(
         super.onCleared()
         temperatureAndHumidityReceiveManager.closeConnection()
     }
+
 
 
 }

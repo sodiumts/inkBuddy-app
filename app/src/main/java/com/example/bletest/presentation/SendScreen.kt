@@ -1,9 +1,13 @@
 package com.example.bletest.presentation
 
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothGatt
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
@@ -14,6 +18,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
@@ -26,6 +31,7 @@ import com.example.bletest.presentation.permissions.PermissionUtils
 import com.example.bletest.presentation.permissions.SystemBroadcastReceiver
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import java.util.*
 
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -144,12 +150,20 @@ fun SendScreen(
                     verticalArrangement = Arrangement.Center
                 ){
                     Text(
-                        text = "fw:${viewModel.firmware}",
+                        text = "testnum:${viewModel.testNum}",
                         style = MaterialTheme.typography.h6
                     )
-                    Text(
-                        text = "fw2:${viewModel.firmware2}",
-                        style = MaterialTheme.typography.h6
+                    Box(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(CircleShape)
+                            .background(Color.Green, CircleShape)
+                            .clickable {
+//                                viewModel.readCharacteristic()
+                                val payload = byteArrayOf(2)
+                                viewModel.writeImage(payload)
+                            }
+
                     )
                 }
             }

@@ -3,7 +3,7 @@ import com.example.bletest.util.Resource
 import kotlinx.coroutines.flow.MutableSharedFlow
 interface TemperatureAndHumidityReceiveManager {
 
-    val data: MutableSharedFlow<Resource<TempSendResult>>
+    val data: MutableSharedFlow<Resource<ReadResult>>
     fun reconnect()
 
     fun disconnect()
@@ -11,4 +11,8 @@ interface TemperatureAndHumidityReceiveManager {
     fun startReceiving()
 
     fun closeConnection()
+
+    fun readCharacteristic()
+
+    fun writeImage(payload:ByteArray)
 }

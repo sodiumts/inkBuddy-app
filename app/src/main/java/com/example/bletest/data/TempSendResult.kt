@@ -1,7 +1,10 @@
 package com.example.bletest.data
 
-data class TempSendResult(
-    val fwVersion: Float,
-    val fwVersion2:Float,
-    val connectionState:ConnectionState
+//data class TempSendResult(
+//    val testNum: Int,
+//    val connectionState:ConnectionState,
+//)
+data class ReadResult(
+    val readNum: String,
+    val connectionState: ConnectionState
 )

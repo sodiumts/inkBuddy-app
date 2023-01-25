@@ -12,7 +12,7 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.util.Log
 import com.example.bletest.data.ConnectionState
-import com.example.bletest.data.TempSendResult
+import com.example.bletest.data.ReadResult
 import com.example.bletest.data.TemperatureAndHumidityReceiveManager
 import com.example.bletest.util.Resource
 import kotlinx.coroutines.CoroutineScope
@@ -33,7 +33,9 @@ class TemperatureAndHumidityBLEReceiveManager @Inject constructor(
     private val CHARACTERISTIC_UUID_FW   =   "00002a26-0000-1000-8000-00805f9b34fb"
     private val CHARACTERISTIC_UUID_HW   =   "00002a27-0000-1000-8000-00805f9b34fb"
 
-    override val data: MutableSharedFlow<Resource<TempSendResult>> = MutableSharedFlow()
+//    override val data: MutableSharedFlow<Resource<TempSendResult>>> = MutableSharedFlow()
+//    override val data: MutableSharedFlow<Resource<ReadResult>>> = MutableSharedFlow()
+    override val data: MutableSharedFlow<Resource<ReadResult>> = MutableSharedFlow()
 
 
     private val bleScanner by lazy{
@@ -78,7 +80,7 @@ class TemperatureAndHumidityBLEReceiveManager @Inject constructor(
                     this@TemperatureAndHumidityBLEReceiveManager.gatt = gatt
                 }else if(newState == BluetoothProfile.STATE_DISCONNECTED){
                     corutineScope.launch {
-                        data.emit(Resource.Success(data = TempSendResult(0f,0f, ConnectionState.Disconnected)))
+                        data.emit(Resource.Success(data = ReadResult("",ConnectionState.Disconnected)))
                     }
                     gatt.close()
                 }
@@ -121,47 +123,56 @@ class TemperatureAndHumidityBLEReceiveManager @Inject constructor(
                     return@launch
                 }
             }else {
-                enableNotification(characteristic)
+//                enableNotification(characteristic)
+                readCharacteristic()
             }
         }
 
-        override fun onCharacteristicChanged(
-            gatt: BluetoothGatt,
-            characteristic: BluetoothGattCharacteristic
-        ) {
-            with(characteristic){
-                when(uuid){
-                    UUID.fromString(CHARACTERISTIC_UUID_FW)->{
-//                        val multiplicator = if(value.first().toInt()>0) -1 else 1
-                        val fwversion = value[1].toFloat()
-                        val fwversion2 = value[2].toFloat()
-                        val fwVersionResult = TempSendResult(
-                            fwversion,
-                            fwversion2,
-                            ConnectionState.Connected
-                        )
-                        corutineScope.launch {
-                            data.emit(Resource.Success(data=fwVersionResult))
-                        }
-                    }
-                    else -> Unit
-                }
-            }
-        }
-
-//        override fun onCharacteristicRead(
-//            gatt: BluetoothGatt?,
-//            characteristic: BluetoothGattCharacteristic?,
-//            status: Int
+//        override fun onCharacteristicChanged(
+//            gatt: BluetoothGatt,
+//            characteristic: BluetoothGattCharacteristic
 //        ) {
-//            characteristic?.value
+//            with(characteristic){
+//                when(uuid){
+//                    UUID.fromString(CHARACTERISTIC_UUID_FW)->{
+////                        val multiplicator = if(value.first().toInt()>0) -1 else 1
+//                        val testNum = value[1].toInt()
+//                        val fwVersionResult = TempSendResult(
+//                            testNum,
+//                            ConnectionState.Connected
+//                        )
+//                        corutineScope.launch {
+//                            data.emit(Resource.Success(data=fwVersionResult))
+//                        }
+//                    }
+//                    else -> Unit
+//                }
+//            }
 //        }
+
+        override fun onCharacteristicRead(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            status: Int
+        ) {
+           var readNum =  characteristic.value.toString(Charsets.UTF_8)
+//            println(readNum)
+//            var New =  characteristic.value[1].toString()
+//            Log.d("Values",readNum.to)
+            val readNumResult = ReadResult(
+                readNum,
+                ConnectionState.Connected
+            )
+            corutineScope.launch {
+                data.emit(Resource.Success(data=readNumResult))
+
+            }
+        }
     }
 
 
-//    private fun example(){
-//        val characteristic = gatt?.getService(UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb"))?.getCharacteristic(UUID.fromString("00002a27-0000-1000-8000-00805f9b34fb"))
-//        gatt?.readCharacteristic(characteristic)
+//    fun readCharacteristic(gatt:BluetoothGatt){
+//
 //    }
 
     private fun enableNotification(characteristic:BluetoothGattCharacteristic){
@@ -184,6 +195,15 @@ class TemperatureAndHumidityBLEReceiveManager @Inject constructor(
             descriptor.value = payload
             gatt.writeDescriptor(descriptor)
         }?: error("Not connected to a BLE device")
+    }
+
+    override fun writeImage(payload: ByteArray){
+        val characteristic = gatt?.getService(UUID.fromString("4fafc201-1fb5-459e-8fcc-c5c9c331914b"))?.getCharacteristic(UUID.fromString("b6a5eeef-8f30-46dd-8689-3b874c0fda71"))
+        gatt?.let{gatt->
+            characteristic?.value = payload
+            gatt.writeCharacteristic(characteristic)
+        }?: error("Not connected to a BLE device")
+//        gatt?.writeCharacteristic(characteristic)
     }
 
 
@@ -221,6 +241,14 @@ class TemperatureAndHumidityBLEReceiveManager @Inject constructor(
         }
         gatt?.close()
     }
+
+    override fun readCharacteristic() {
+        val characteristic = gatt?.getService(UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb"))?.getCharacteristic(UUID.fromString("00002a26-0000-1000-8000-00805f9b34fb"))
+        gatt?.readCharacteristic(characteristic)
+
+    }
+
+
     private fun disconnectCharacteristic(characteristic: BluetoothGattCharacteristic){
         val cccdUuid = UUID.fromString(CCCD_DESCRIPTOR_UUID)
         characteristic.getDescriptor(cccdUuid)?.let{cccdDescriptor ->
